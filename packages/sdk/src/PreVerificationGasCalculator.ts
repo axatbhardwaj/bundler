@@ -108,7 +108,8 @@ export const MainnetConfig: PreVerificationGasCalculatorConfig = {
 
 export const ChainConfigs: { [key: number]: PreVerificationGasCalculatorConfig } = {
   1: MainnetConfig,
-  1337: MainnetConfig
+  1337: MainnetConfig,
+  11155111: MainnetConfig // Sepolia
 }
 
 export class PreVerificationGasCalculator {
