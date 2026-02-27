@@ -16,7 +16,10 @@ const decodeRevertReasonContracts = new Interface([
 export function decodeRevertReason (data: string | Error, nullIfNoMatch = true): string | null {
   if (typeof data !== 'string') {
     const err = data as any
-    data = (err.data?.data ?? err.data ?? err.error.data) as string
+    data = (err.data?.data ?? err.data ?? err.error?.data) as string
+    if (data == null) {
+      return nullIfNoMatch ? null : 'Error: no revert data'
+    }
   }
   const methodSig = data.slice(0, 10)
   const dataParams = '0x' + data.slice(10)
@@ -30,6 +33,9 @@ export function decodeRevertReason (data: string | Error, nullIfNoMatch = true):
     } else if (methodSig === '0x4e487b71') {
       const [code] = ethers.utils.defaultAbiCoder.decode(['uint256'], dataParams)
       return `Panic(${panicCodes[code] ?? code} + ')`
+    } else if (methodSig === '0x1a3b45fd') {
+      // EP v0.8 custom error: InvalidBeneficiary(address) — map to expected string
+      return 'Error(AA90 invalid beneficiary)'
     }
     const err = decodeRevertReasonContracts.parseError(data)
     // treat any error "bytes" argument as possible error to decode (e.g. FailedOpWithRevert, PostOpReverted)
