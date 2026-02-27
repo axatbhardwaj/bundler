@@ -215,7 +215,8 @@ export class ValidationManager implements IValidationManager {
       to: this.entryPoint.address,
       data,
       authorizationList: userOp.eip7702Auth == null ? null : [userOp.eip7702Auth],
-      gas: sum(prevg, userOp.verificationGasLimit, userOp.paymasterVerificationGasLimit).toNumber()
+      // EP v0.8: include callGasLimit so handleOps reaches the success revert signal; hex for Go RPC compat
+      gas: sum(prevg, userOp.verificationGasLimit, userOp.paymasterVerificationGasLimit, userOp.callGasLimit).toHexString()
     }
 
     try {
