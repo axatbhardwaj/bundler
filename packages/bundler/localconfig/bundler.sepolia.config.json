@@ -5,7 +5,7 @@
   "privateApiPort": "4338",
   "network": "https://ethereum-sepolia-rpc.publicnode.com",
   "entryPoint": "0x433709009B8330FDa32311DF1C2AFA402eD8D009",
-  "beneficiary": "0x0000000000000000000000000000000000000000",
+  "beneficiary": "0x81C160e77534a2266dCA189feB44d6a23Da66783",
   "minBalance": "0",
   "mnemonic": "./localconfig/mnemonic.sepolia.txt",
   "maxBundleGas": 5000000,
