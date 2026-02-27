@@ -21,3 +21,5 @@ tsconfig.tsbuildinfo
 /packages/bundler/src/types/
 yarn-error.log
 .vscode
+# Bundler signer mnemonics (secret)
+**/mnemonic.sepolia.txt

@@ -1,0 +1,16 @@
+{
+  "chainId": 11155111,
+  "gasFactor": "1",
+  "port": "4337",
+  "privateApiPort": "4338",
+  "network": "https://ethereum-sepolia-rpc.publicnode.com",
+  "entryPoint": "0x433709009B8330FDa32311DF1C2AFA402eD8D009",
+  "beneficiary": "0x0000000000000000000000000000000000000000",
+  "minBalance": "0",
+  "mnemonic": "./localconfig/mnemonic.sepolia.txt",
+  "maxBundleGas": 5000000,
+  "minStake": "1",
+  "minUnstakeDelay": 0,
+  "autoBundleInterval": 12,
+  "autoBundleMempoolSize": 10
+}
