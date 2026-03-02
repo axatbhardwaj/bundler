@@ -11,6 +11,7 @@
   "maxBundleGas": 5000000,
   "minStake": "1",
   "minUnstakeDelay": 0,
+  "debugRpc": true,
   "autoBundleInterval": 12,
   "autoBundleMempoolSize": 10
 }
