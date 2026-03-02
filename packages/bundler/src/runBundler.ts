@@ -5,6 +5,7 @@ import {
   deployEntryPoint,
   erc4337RuntimeVersion,
   IEntryPoint,
+  IEntryPoint__factory,
   RpcError,
   supportsRpcMethod
 } from '@account-abstraction/utils'
@@ -174,7 +175,7 @@ export async function runBundler (argv: string[], overrideExit = true): Promise<
     }
   }
 
-  const {
+  let {
     entryPoint
   } = await connectContracts(wallet, !config.rip7560)
 
@@ -182,6 +183,13 @@ export async function runBundler (argv: string[], overrideExit = true): Promise<
     console.warn('NOTICE: overriding config entrypoint: ', { entryPoint: entryPoint.address })
     config.entryPoint = entryPoint.address
     config.senderCreator = await entryPoint.senderCreator()
+  }
+
+  // Patch G: For non-local chains, ensure the entryPoint instance matches config.
+  // connectContracts uses CREATE2 deterministic addressing from bundler submodule bytecode,
+  // which may differ from the EP specified in config (e.g. eth-infinitism vs OZ canonical).
+  if (entryPoint == null || entryPoint.address.toLowerCase() !== config.entryPoint.toLowerCase()) {
+    entryPoint = IEntryPoint__factory.connect(config.entryPoint, wallet)
   }
 
   // bundleSize=1 replicate current immediate bundling mode
