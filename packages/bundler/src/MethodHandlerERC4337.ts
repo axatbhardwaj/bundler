@@ -25,6 +25,7 @@ import {
   requireAddressAndFields,
   requireCond,
   simulationRpcParams,
+  sum,
   tostr,
   unpackUserOp
 } from '@account-abstraction/utils'
@@ -153,6 +154,14 @@ export class MethodHandlerERC4337 {
       // }
       // }
     )
+    // EP v0.8: explicit gas so simulateHandleOp completes factory deploy + validate + execute
+    const simGas = sum(
+      this.preVerificationGasCalculator.estimatePreVerificationGas(userOp, {}),
+      userOp.verificationGasLimit,
+      userOp.paymasterVerificationGasLimit,
+      userOp.callGasLimit
+    )
+    rpcParams[0].gas = BigNumber.from(simGas).toHexString().replace(/0x0(.)/, '0x$1')
     const ret = await provider.send('eth_call', rpcParams)
       .catch((e: any) => { throw new RpcError(decodeRevertReason(e) as string, ValidationErrors.SimulateValidation) })
 
