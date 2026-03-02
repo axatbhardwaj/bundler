@@ -37,7 +37,7 @@ import {
   PaymasterValidationInfo
 } from '@account-abstraction/utils'
 
-import { debug_traceCall } from './GethTracer'
+import { debug_traceCall, gethHex } from './GethTracer'
 
 import { IValidationManager, ValidateUserOpResult, ValidationResult } from './IValidationManager'
 import { ERC7562Parser } from './ERC7562Parser'
@@ -216,7 +216,7 @@ export class ValidationManager implements IValidationManager {
       data,
       authorizationList: userOp.eip7702Auth == null ? null : [userOp.eip7702Auth],
       // EP v0.8: include callGasLimit so handleOps reaches the success revert signal; hex for Go RPC compat
-      gas: sum(prevg, userOp.verificationGasLimit, userOp.paymasterVerificationGasLimit, userOp.callGasLimit).toHexString()
+      gas: gethHex(sum(prevg, userOp.verificationGasLimit, userOp.paymasterVerificationGasLimit, userOp.callGasLimit))
     }
 
     try {
