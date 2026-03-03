@@ -5,6 +5,7 @@ import {
   OperationBase,
   RpcError,
   StakeInfo,
+  UserOperation,
   ValidationErrors,
   getPackedNonce,
   requireCond
@@ -176,6 +177,13 @@ export class MempoolManager {
   }
 
   private checkReplaceUserOp (oldEntry: MempoolEntry, entry: MempoolEntry): void {
+    // Patch L: Allow paymasterData-only replacement without fee bump.
+    // This enables XLP voucher appending: same UserOp, different paymasterData (placeholder → real voucher).
+    if (this.isPaymasterDataOnlyChange(oldEntry.userOp, entry.userOp)) {
+      debug('Allowing paymasterData-only replacement for sender=%s', entry.userOp.sender)
+      return
+    }
+
     const oldMaxPriorityFeePerGas = BigNumber.from(oldEntry.userOp.maxPriorityFeePerGas).toNumber()
     const newMaxPriorityFeePerGas = BigNumber.from(entry.userOp.maxPriorityFeePerGas).toNumber()
     const oldMaxFeePerGas = BigNumber.from(oldEntry.userOp.maxFeePerGas).toNumber()
@@ -185,6 +193,20 @@ export class MempoolManager {
       `Replacement UserOperation must have higher maxPriorityFeePerGas (old=${oldMaxPriorityFeePerGas} new=${newMaxPriorityFeePerGas}) `, ValidationErrors.InvalidFields)
     requireCond(newMaxFeePerGas >= oldMaxFeePerGas * 1.1,
       `Replacement UserOperation must have higher maxFeePerGas (old=${oldMaxFeePerGas} new=${newMaxFeePerGas}) `, ValidationErrors.InvalidFields)
+  }
+
+  private isPaymasterDataOnlyChange (oldOp: OperationBase, newOp: OperationBase): boolean {
+    const oldUo = oldOp as UserOperation
+    const newUo = newOp as UserOperation
+    return oldUo.sender === newUo.sender &&
+      BigNumber.from(oldUo.nonce).eq(newUo.nonce) &&
+      oldUo.callData === newUo.callData &&
+      oldUo.signature === newUo.signature &&
+      oldUo.paymaster === newUo.paymaster &&
+      BigNumber.from(oldUo.callGasLimit).eq(newUo.callGasLimit) &&
+      BigNumber.from(oldUo.verificationGasLimit).eq(newUo.verificationGasLimit) &&
+      BigNumber.from(oldUo.maxFeePerGas).eq(newUo.maxFeePerGas) &&
+      BigNumber.from(oldUo.maxPriorityFeePerGas).eq(newUo.maxPriorityFeePerGas)
   }
 
   getSortedForInclusion (): MempoolEntry[] {
