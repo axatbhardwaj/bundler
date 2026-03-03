@@ -39,7 +39,7 @@ import {
 
 import { debug_traceCall, gethHex } from './GethTracer'
 
-import { IValidationManager, ValidateUserOpResult, ValidationResult } from './IValidationManager'
+import { EmptyValidateUserOpResult, IValidationManager, ValidateUserOpResult, ValidationResult } from './IValidationManager'
 import { ERC7562Parser } from './ERC7562Parser'
 import { ERC7562Call } from './ERC7562Call'
 import { bundlerCollectorTracer, BundlerTracerResult } from './BundlerCollectorTracer'
@@ -340,6 +340,25 @@ export class ValidationManager implements IValidationManager {
     checkStakes = true
   ): Promise<ValidateUserOpResult> {
     const userOp = operation as UserOperation
+
+    // Patch K: Allow placeholder paymaster sigs into mempool (unsafe mode only).
+    // EP v0.9 paymasterDataKeccak excludes paymasterSignature from the UserOp hash,
+    // so an XLP can replace the placeholder with a real voucher after Bob signs.
+    // Only on initial validation (previousCodeHashes==null), NOT during createBundle's
+    // second validation — we don't want to bundle ops that still have placeholders.
+    if (this.unsafe && previousCodeHashes == null && userOp.paymasterData != null) {
+      const PAYMASTER_SIG_MAGIC = '22e325a297439656'
+      const pmData = (userOp.paymasterData as string).toLowerCase().replace('0x', '')
+      if (pmData.endsWith(PAYMASTER_SIG_MAGIC)) {
+        const sigLenHex = pmData.slice(pmData.length - PAYMASTER_SIG_MAGIC.length - 4, pmData.length - PAYMASTER_SIG_MAGIC.length)
+        const sigLen = parseInt(sigLenHex, 16)
+        if (sigLen <= 2) {
+          debug('Accepting placeholder paymaster sig (sigLen=%d) in unsafe mode', sigLen)
+          return EmptyValidateUserOpResult
+        }
+      }
+    }
+
     if (previousCodeHashes != null && previousCodeHashes.addresses.length > 0) {
       const { hash: codeHashes } = await this.getCodeHashes(previousCodeHashes.addresses)
       // [COD-010]
